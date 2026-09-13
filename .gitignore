@@ -13,6 +13,7 @@ __pycache__/
 data/private/
 data/*.json
 !data/pricing.json
+!data/evidence.json
 .runtime/
 test-results/
 playwright-report/

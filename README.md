@@ -4,6 +4,12 @@
 
 “Kubernetes schedules compute. Optara schedules AI intelligence.”
 
+**GitHub:** [rohit16111999/optara](https://github.com/rohit16111999/optara) · **W&B:** [project](https://wandb.ai/models-student1155/optara) · **Weave:** [traces and evaluations](https://wandb.ai/models-student1155/optara/weave)
+
+**Mission Control:** [public app](https://optara-production.up.railway.app) — verified through read-only browser QA on 2026-09-13. **Experiment & Intelligence Lab:** [open in Molab](https://molab.marimo.io/github/rohit16111999/optara/blob/main/experiment_lab/optara_lab.py). See [MOLAB.md](MOLAB.md) for preview/runtime boundaries and [VALIDATION.md](VALIDATION.md) for measured results.
+
+**Mission Control shows what Optara decides now. marimo shows the empirical evidence that teaches Optara what to decide next.** The operational surface executes and traces requests; the scientific surface compares recipes, Pareto membership, paired shadows, policy gates, and honest baseline results.
+
 Optara is an AI execution control plane. Give it a task, quality target, dollar budget, and deadline. It selects an execution recipe, evaluates the actual answer, repairs failed constraints within limits, and records evidence for future scheduling. A separate shadow path tests alternatives before a versioned policy can be promoted.
 
 ![Real Optara execution](screenshots/live-run.png)
@@ -126,7 +132,15 @@ Official implementation references: [Inference API](https://docs.wandb.ai/infere
 
 Open http://127.0.0.1:2718. Select evidence namespace/family, compare recipe quality/cost/latency, inspect family-specific Pareto points, review policy versions and shadow pairs, and browse benchmark/run history. The controlled-experiment form only submits work on an explicit click. Its default is Simulation.
 
-For Molab, open `experiment_lab/optara_lab.py` and upload the exported JSON using the file control. Inline dependency metadata supports a fresh environment. A hosted Molab kernel cannot call your laptop's localhost API; uploaded evidence supports analysis there, while live execution controls require the local backend. Hosted Molab deployment itself is not claimed.
+For Molab, [open the GitHub notebook preview](https://molab.marimo.io/github/rohit16111999/optara/blob/main/experiment_lab/optara_lab.py); the committed session provides rendered outputs. **Run it now** starts an interactive server when account access permits. See [MOLAB.md](MOLAB.md). The notebook defaults to the public-safe `data/evidence.json` snapshot, using the repository copy locally or GitHub remotely. Uploading an export also works without localhost or credentials. LIVE and SIMULATION are checked separately, including mismatched uploads.
+
+The lab includes an overview, quality/cost and quality/latency charts, family-specific Pareto membership, recorded scheduler decisions, shadow deltas, policy confidence/gates, the latest benchmark, run history, and sponsor evidence. Historical reports remain available; the benchmark tab never combines incompatible report versions. Controlled experiments default to Simulation and require an explicit submit against the local backend. No page-load inference occurs.
+
+Exact standalone local command:
+
+```powershell
+.venv\Scripts\python.exe -m marimo run experiment_lab/optara_lab.py --host 127.0.0.1 --port 2718 --headless --no-sandbox
+```
 
 ## Sponsor mapping and optional access
 
@@ -193,6 +207,6 @@ The last command performs five small real task/shadow pairs and bounded cache ch
 
 Next.js supplies Mission Control, React Flow stages, Motion transitions, and Recharts analysis. FastAPI owns execution and SSE; SQLite stores documents, ordered events, and spend reservations. HTTPX isolates the inference adapter. No heavyweight queue, vector database, or agent framework is needed. See [ARCHITECTURE.md](ARCHITECTURE.md), [DEMO.md](DEMO.md), and [SUBMISSION.md](SUBMISSION.md).
 
-This is a local, single-user demonstrator with two concurrent worker slots. Priority is recorded but does not implement a preemptive queue. The heuristic profiler does not add external retrieval, so current-events tasks are not grounded. Model/judge variance and small-sample policy bounds limit general claims. The AST evaluator deliberately supports a subset of Python. Historical traces contain task content and model output after credential redaction; use synthetic/public demo tasks. SQLite and localhost controls are not a multi-tenant deployment security boundary.
+This is a single-user demonstrator with two concurrent worker slots and an existing public demo deployment. Priority is recorded but does not implement a preemptive queue. The heuristic profiler does not add external retrieval, so current-events tasks are not grounded. Model/judge variance and small-sample policy bounds limit general claims. The AST evaluator deliberately supports a subset of Python. Historical traces contain task content and model output after credential redaction; use synthetic/public demo tasks. The public demo has no tenant authentication; its persisted $2 inference ledger bounds aggregate model spending. SQLite and origin checks are not a multi-tenant security boundary. Hosting remains unchanged in the final pass.
 
 Production evolution: retain the typed gateway, recipe/guard contracts, and event schema while moving to stateless API services, durable queues, isolated worker pools, managed relational storage, distributed cache, multi-tenant spend ledgers, regional execution, and multiple provider adapters. Add workload-specific held-out evaluations, calibrated uncertainty, queue-aware deadlines, and authenticated policy approvals before production adoption.

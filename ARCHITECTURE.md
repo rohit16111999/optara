@@ -92,4 +92,10 @@ Secret-bearing settings are never serialized into traces. Credential lookup uses
 
 ## Production evolution
 
+The deployment package preserves this architecture in one long-running Docker service: `scripts/serve.py` starts FastAPI on internal port 8000, waits for its health check, then exposes production Next.js on the host's `PORT`. Same-origin `/api` rewrites carry HTTP and SSE to FastAPI. Railway's persistent volume is intended to mount at `/data`, with `OPTARA_DB_PATH=/data/optara.db`; the saved spend ledger survives deployments. W&B credentials belong in the hosting secret environment, never the image or repository. `RAILWAY_PUBLIC_DOMAIN` supplies the allowed browser origin unless explicitly configured. The existing public app and its persisted real execution were verified. The final pass makes no hosting changes; the active demo database is `/data/optara-demo.db`.
+
 The current process and SQLite design minimize demo failure modes. A production version would replace the in-memory worker set with a durable queue, make the control plane stateless, use managed relational persistence and a distributed atomic budget ledger, add isolated execution workers, and scope cache/policies by authenticated tenant. The provider and evaluator interfaces are explicit so multi-provider/regional execution can evolve without changing the frontend event contract. Held-out workload evaluation and stronger statistical promotion controls come before automatic policy deployment.
+
+## Scientific analysis surface
+
+Mission Control shows current execution decisions. `experiment_lab/optara_lab.py` explains their empirical basis through reactive source/namespace/family filters, overview cards, Pareto charts, recorded candidate decisions, paired shadow deltas, policy gates, and the latest benchmark. The lab reads a safe versioned snapshot, an uploaded export, or the local API. It never promotes policies or makes paid calls on load. Molab uses the same portable notebook and public-safe evidence, with a rendered session for GitHub previews; it is not a second serving backend.

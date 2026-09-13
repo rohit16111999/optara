@@ -20,7 +20,7 @@ def main():
     evidence['observations']=[o for o in evidence['observations'] if o.get('evaluator_version','v1')==VERSION]
     for run in store.list('runs',10000):
         if run['task']['mode']==args.mode:
-            evidence['runs'].append({k:run.get(k) for k in ['run_id','status','quality','total_cost','total_latency','sla_hit','cache_hit','trace_url','scheduler_reason','selected_recipe','profile']})
+            evidence['runs'].append({k:run.get(k) for k in ['run_id','status','quality','total_cost','total_latency','sla_hit','cache_hit','trace_url','scheduler_reason','selected_recipe','profile','candidate_recipes','rejected_candidates']})
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(evidence,indent=2),encoding='utf-8')
     print(f'Exported {len(evidence["runs"])} {args.mode} run summaries to {args.output}. Prompts, outputs and credentials excluded.')

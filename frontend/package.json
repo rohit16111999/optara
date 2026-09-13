@@ -1,0 +1,6 @@
+{
+  "name": "optara-frontend", "version": "0.1.0", "private": true,
+  "scripts": {"dev": "next dev --hostname 127.0.0.1", "build": "next build", "start": "next start --hostname 127.0.0.1", "test": "playwright test", "typecheck": "tsc --noEmit"},
+  "dependencies": {"next": "^16.1.6", "react": "^19.2.0", "react-dom": "^19.2.0", "@xyflow/react": "^12.8.4", "motion": "^12.23.24", "recharts": "^3.7.0", "lucide-react": "^0.577.0", "tailwindcss": "^4.1.18", "@tailwindcss/postcss": "^4.1.18"},
+  "devDependencies": {"typescript": "^5.9.3", "@types/node": "^22", "@types/react": "^19", "@types/react-dom": "^19", "@playwright/test": "^1.58.2", "agent-browser": "^0.21.0"}
+}

@@ -1,0 +1,20 @@
+[project]
+name = "optara"
+version = "0.1.0"
+description = "Intelligence, Optimized. An evidence-driven AI execution control plane."
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "fastapi>=0.115,<1", "uvicorn[standard]>=0.34,<1", "pydantic-settings>=2.8,<3",
+  "httpx>=0.28,<1", "wandb>=0.21,<1", "weave>=0.52,<1", "jsonschema>=4.23,<5",
+  "marimo>=0.14,<1", "altair>=5,<7", "pandas>=2.2,<4", "mcp>=1.12,<2",
+  "pytest>=8,<10", "pytest-asyncio>=0.26,<2"
+]
+
+[tool.pytest.ini_options]
+addopts = "-p no:cacheprovider"
+testpaths = ["backend/tests"]
+asyncio_mode = "auto"
+markers = ["live: opt-in paid W&B integration check"]
+
+[tool.uv]
+package = false

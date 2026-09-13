@@ -1,0 +1,14 @@
+{
+  "source": "https://site.wandb.ai/pricing/tokens/",
+  "verified_at": "2026-09-13",
+  "unit": "USD per million tokens; uncached list rates, not a billing receipt",
+  "models": {
+    "meta-llama/Llama-3.1-8B-Instruct": [0.22, 0.22],
+    "meta-llama/Llama-3.3-70B-Instruct": [0.71, 0.71],
+    "openai/gpt-oss-20b": [0.03, 0.13],
+    "openai/gpt-oss-120b": [0.03, 0.17],
+    "ibm-granite/granite-4.2-8b": [0.10, 0.15],
+    "deepseek-ai/DeepSeek-V4-Flash-0731": [0.13, 0.28],
+    "deepseek-ai/DeepSeek-V4-Pro-0813": [1.31, 3.96]
+  }
+}

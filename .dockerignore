@@ -1,0 +1,17 @@
+.git
+.env
+.env.*
+.venv
+.runtime
+**/node_modules
+**/.next
+**/__pycache__
+**/__marimo__
+**/test-results
+**/playwright-report
+**/*.db
+**/*.db-*
+**/*.log
+screenshots
+data/*.json
+!data/pricing.json

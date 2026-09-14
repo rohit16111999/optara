@@ -195,7 +195,7 @@ def _(benchmark_panel, frontier_panel, mo, pd, policy_panel, scoped_runs, shadow
 | Weave | Trajectories and evaluations | Remotely verified execution, repair, calibration, benchmark and shadow traces |
 | W&B MCP | Historical evidence | Authenticated project, schema, count and trace queries |
 | marimo / Molab | Experiment and policy analysis | This reactive analysis environment; portable safe evidence |
-| ARIA | Propose evidence-based candidates | Access unavailable; no fabricated analysis or direct promotion |
+| ARIA | Propose evidence-based candidates | Experimental W&B UI evidence analysis used; not in serving path; no direct policy changes or verified programmatic integration |
 | TypeSafe AI | Optional hackathon adapter | Hackathon access/documentation unavailable |
 | CoreWeave Sandbox | Isolated evaluation runtime | Credential/runner unavailable; bounded local AST fallback |
 

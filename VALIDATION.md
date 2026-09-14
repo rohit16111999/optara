@@ -1,5 +1,19 @@
 # Optara validation and Definition of Done
 
+## Portfolio v1 release — September 14, 2026
+
+- Execute / Runs / Evaluations now form the primary local UI. Selected configuration, expected candidate metrics, actual result/evaluation and execution evidence precede the compact graph. Advanced experiment functionality is retained behind disclosure controls.
+- Existing evaluator regressions: **5 passed** (exact reference, JSON structure, JSON reference, supported Python, bounded repair). Four passed initially; only the repair test was rerun with a workspace-local pytest temporary directory after an OS permission error. No backend implementation changed and no full-suite rerun was performed.
+- Frontend: **TypeScript and production build passed once**.
+- Targeted saved-run Playwright smoke: **1 passed**, with **zero mutating API requests and zero browser errors**. Earlier attempts reached a stale local frontend or disconnected backend; restarting the existing localhost processes resolved this without application changes or another build.
+- Demo run: `9dbae5a2-aec1-4ff3-a35c-9282e6cf515f`, already saved and remotely verified in the earlier pass. Reopened without inference: Focused v2 / `openai/gpt-oss-20b`, exact-match quality 1.00, $0.00000584, 0.563s, 128 tokens, SLA HIT, zero repairs, cache MISS.
+- Current local LIVE evidence: **64 observations, 7 observed recipes, 8 uncached production runs, 6 completed shadow pairs and 2 policy versions**. Authentication-only observations are excluded; observations use evaluator v2.
+- Changed publication content: **15 files scanned, zero credential findings**. Notebook source parses and rendered-session JSON is valid; only factual ARIA text changed in the notebook.
+- **No new paid inference, calibration, benchmark or shadow experiment. No deployment or Railway changes.** The existing public app retains its earlier UI; this release is intended for local portfolio recording from the published source.
+- Offline regression protection reuses the existing pytest evaluator/controller fixtures documented in README. ARIA wording reflects experimental W&B UI analysis, not a verified callable production integration.
+
+The records below describe the earlier September 13 acceptance pass and remain historical evidence; their old UI names do not describe the current local navigation.
+
 Verified 2026-09-13 UTC. These results describe actual executions, not simulations or projected savings. The existing public deployment was verified read-only in the final pass. No hosting settings, deployments, or public inference were changed in this pass.
 
 ## Final local acceptance
@@ -20,7 +34,7 @@ Verified 2026-09-13 UTC. These results describe actual executions, not simulatio
 | W&B MCP | Authenticated project, schema, count, and history queries passed; Optara's five-tool stdio interface passed |
 | Weave evaluations | Current calibration, benchmark, paired-shadow evaluation, comparison, and MCP traces remotely read back as finished without exceptions |
 | marimo lab | Polished six-tab lab, overview cards, family Pareto charts, recorded scheduler decisions, paired deltas, policy gates and latest benchmark; safe exported evidence and rendered Molab preview prepared |
-| ARIA / TypeSafe / Sandbox | Unavailable; disabled integrations and bounded local AST fallback reported truthfully |
+| ARIA / TypeSafe / Sandbox | ARIA UI analysis used experimentally; programmatic adapter unverified. TypeSafe and Sandbox access unavailable; bounded local AST fallback retained. |
 | Secret scan / repository | No findings in source and local evidence scan; credentials, databases, caches, environments and build artifacts ignored |
 | GitHub | Public repository pushed: https://github.com/rohit16111999/optara |
 | Public deployment / public real run | Existing [https://optara-production.up.railway.app](https://optara-production.up.railway.app) verified: persisted real run, assets, favicon, SLA/evaluator/trace evidence, responsive widths and no browser console errors |
@@ -75,4 +89,4 @@ Backend tests: **77 passed, 1 skipped**, two third-party deprecation warnings. F
 
 The marimo lab retains immutable real evidence and clearly separates namespaces. Its overview excludes authentication-only observations. Production counts refer to uncached serving observations, not calibration/benchmark/shadow calls. Policy confidence remains an evidence-count heuristic. Saved selected/rejected decisions are displayed directly; the lab does not invent or enact policy decisions. The exported snapshot contains no prompts, model outputs, or credentials. See [MOLAB.md](MOLAB.md) for public preview and interactive-runtime status.
 
-ARIA: no callable capability in the authenticated W&B MCP inventory or present credential. TypeSafe AI: no hackathon API/SDK documentation or legitimate access in this environment. CoreWeave Sandbox: no `CWSANDBOX_API_KEY` or runner access. These adapters remain explicitly unavailable.
+Experimental W&B ARIA analysis was used to inspect accumulated evaluation evidence. ARIA is not part of the production request path and does not directly modify production policy. A callable programmatic integration is not verified. TypeSafe AI: no hackathon API/SDK documentation or legitimate access in this environment. CoreWeave Sandbox: no `CWSANDBOX_API_KEY` or runner access. These adapters remain explicitly unavailable.

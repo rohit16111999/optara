@@ -1,11 +1,13 @@
 # Optara architecture
 
+**Constraint-Aware LLM Execution & Evaluation Platform**
+
 The backend owns execution state and all paid actions. The browser visualizes persisted facts; elapsed-time animation is the only client-generated execution measurement. SQLite transactions serialize spend reservations and event sequence numbers. Weave is the remote evidence layer; a Weave or MCP outage does not replace local control logic.
 
 ```mermaid
 flowchart LR
   subgraph Browser[Next.js browser]
-    User[Task + quality + budget + deadline] --> UI[Mission Control]
+    User[Task + quality + budget + deadline] --> UI[Execute]
     Graph[React Flow graph + KPIs + result]
   end
   subgraph Backend[FastAPI control plane]
@@ -90,12 +92,32 @@ The browser consumes SSE during execution and polls snapshot history afterward s
 
 Secret-bearing settings are never serialized into traces. Credential lookup uses environment/settings or the standard W&B credential file. Redaction applies to task/output paths and trace postprocessing. Inference failures expose a bounded diagnostic, not raw provider response headers or authorization data.
 
-## Production evolution
+## Existing runtime boundary
 
 The deployment package preserves this architecture in one long-running Docker service: `scripts/serve.py` starts FastAPI on internal port 8000, waits for its health check, then exposes production Next.js on the host's `PORT`. Same-origin `/api` rewrites carry HTTP and SSE to FastAPI. Railway's persistent volume is intended to mount at `/data`, with `OPTARA_DB_PATH=/data/optara.db`; the saved spend ledger survives deployments. W&B credentials belong in the hosting secret environment, never the image or repository. `RAILWAY_PUBLIC_DOMAIN` supplies the allowed browser origin unless explicitly configured. The existing public app and its persisted real execution were verified. The final pass makes no hosting changes; the active demo database is `/data/optara-demo.db`.
 
-The current process and SQLite design minimize demo failure modes. A production version would replace the in-memory worker set with a durable queue, make the control plane stateless, use managed relational persistence and a distributed atomic budget ledger, add isolated execution workers, and scope cache/policies by authenticated tenant. The provider and evaluator interfaces are explicit so multi-provider/regional execution can evolve without changing the frontend event contract. Held-out workload evaluation and stronger statistical promotion controls come before automatic policy deployment.
+This remains a production-oriented single-user demonstrator, not a distributed or multi-tenant service. The portfolio release changes the local UI and documentation only; the existing public host retains its previously deployed UI.
+
+## Execution contracts
+
+- **TaskProfile**: deterministic task-family, difficulty, cacheability and evaluator selection hints; no paid profiling call.
+- **Recipe**: versioned model ID, reasoning configuration, output allowance, verifier and bounded repair settings.
+- **Scheduler**: family/version evidence, feasibility checks, Pareto filtering and conservative quality estimates. Saved candidates and rejection reasons explain the choice; priors remain distinct from observations.
+- **W&B Inference**: typed adapter with actual token accounting and guarded provider calls.
+- **Evaluator**: exact/reference, JSON schema/field checks or supported Python behavioral tests; otherwise a labelled rubric estimate. Unsupported evaluation is a limitation, not certified incorrectness.
+- **Repair**: failed checks inform a bounded retry; retain the best evaluated answer if further work is blocked or worse.
+- **Cache**: confidence, passing quality, freshness, mode, prompt semantics and recipe/evaluator versions control reuse.
+- **Persistence / Weave**: SQLite owns runs and events; traces correlate by stored IDs and URLs. Trace failure does not destroy the local result.
+- **Evaluation evidence**: current-version observations feed recipe statistics; historical reports remain immutable. Offline pytest fixtures exercise evaluator and repair regressions without live calls.
+
+## Product surfaces
+
+Execute presents constraints, selected configuration, expected candidate metrics, actual result, evaluation and execution evidence before the compact graph. Runs reopens records through GET endpoints; it never submits inference. Evaluations combines measured family-level quality/cost/latency Pareto analysis, recipe performance, evaluator coverage and completed benchmark reports. Shadow, calibration and explicit policy actions remain in a collapsed Advanced Experiments section.
 
 ## Scientific analysis surface
 
-Mission Control shows current execution decisions. `experiment_lab/optara_lab.py` explains their empirical basis through reactive source/namespace/family filters, overview cards, Pareto charts, recorded candidate decisions, paired shadow deltas, policy gates, and the latest benchmark. The lab reads a safe versioned snapshot, an uploaded export, or the local API. It never promotes policies or makes paid calls on load. Molab uses the same portable notebook and public-safe evidence, with a rendered session for GitHub previews; it is not a second serving backend.
+Execute shows current execution decisions. `experiment_lab/optara_lab.py` explains their empirical basis through reactive source/namespace/family filters, overview cards, Pareto charts, recorded candidate decisions, paired shadow deltas, policy gates, and the latest benchmark. The lab reads a safe versioned snapshot, an uploaded export, or the local API. It never promotes policies or makes paid calls on load. Molab uses the same portable notebook and public-safe evidence, with a rendered session for GitHub previews; it is not a second serving backend.
+
+## Experimental analysis boundary
+
+Experimental W&B ARIA analysis was used to inspect accumulated evaluation evidence. ARIA is not part of the production request path and does not directly modify production policy. A callable programmatic integration is not verified.

@@ -1,8 +1,10 @@
+> Historical hackathon submission material. The current portfolio release is described in README.md.
+
 # Optara
 
 **Tagline:** Intelligence, Optimized.
 
-**One-liner:** Optara is a self-improving AI execution control plane that dynamically allocates model capability, reasoning depth, verification, and repair budget to meet quality, cost, and latency targets.
+**One-liner:** Optara evaluates and executes LLM recipes against quality, cost and latency constraints, validates responses, performs bounded repair and records execution evidence.
 
 ## Problem
 
@@ -28,7 +30,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for live, repair, shadow, learning, calib
 | Weave | Remotely verified execution trajectories, benchmark/calibration evaluations, paired shadow evaluations, and supported MCP instrumentation |
 | W&B MCP | Authenticated project and trace schema/count/history queries, independent of the serving path |
 | marimo / Molab | Working local experiment lab and portable notebook with uploaded real evidence |
-| ARIA | Disabled boundary; actual Weave evidence and documented analysis handoff ready when callable account access exists |
+| ARIA | Experimental W&B UI analysis of existing evidence; not in live serving or policy promotion; programmatic integration unverified |
 | TypeSafe | Disabled adapter pending actual hackathon documentation and credentials |
 | CoreWeave Sandboxes | No credential/runner access; bounded local AST fallback, no fabricated sandbox execution |
 
@@ -58,6 +60,6 @@ The three-minute flow is in [DEMO.md](DEMO.md). Actual screenshots are in [scree
 
 ## Limitations and future work
 
-The current implementation is a single-user demonstrator with two worker slots and an existing public Mission Control deployment. Tiny in-sample benchmarks demonstrate control behavior, not population-level savings. The heuristic profiler, smoothed quality uncertainty, and approximate paired-policy bounds need validation on held-out workloads. Rubric scores are estimates. The safe interpreter supports a restricted Python subset and does not prove asymptotic complexity. Priority is recorded without a preemptive queue. Molab preview publication is distinct from an authenticated running cloud session. ARIA, TypeSafe, and external Sandboxes remain unavailable; no fabricated sponsor integration is claimed.
+The current implementation is a single-user demonstrator with two worker slots and an existing public Mission Control deployment. Tiny in-sample benchmarks demonstrate control behavior, not population-level savings. The heuristic profiler, smoothed quality uncertainty, and approximate paired-policy bounds need validation on held-out workloads. Rubric scores are estimates. The safe interpreter supports a restricted Python subset and does not prove asymptotic complexity. Priority is recorded without a preemptive queue. Molab preview publication is distinct from an authenticated running cloud session. TypeSafe and external Sandboxes remain unavailable; ARIA UI analysis is experimental and its programmatic integration is unverified; no fabricated sponsor integration is claimed.
 
 Future work includes held-out evaluation suites, calibrated uncertainty, richer capability discovery, authenticated multi-tenant controls, durable distributed workers, queue-aware deadlines, multi-provider recipes, and isolated full-language execution when sandbox access is available.

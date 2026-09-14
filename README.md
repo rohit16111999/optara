@@ -1,212 +1,129 @@
 # Optara
 
-**Intelligence, Optimized.**
+**Constraint-Aware LLM Execution & Evaluation Platform**
 
-“Kubernetes schedules compute. Optara schedules AI intelligence.”
+Optara evaluates LLM execution strategies against quality, cost, and latency constraints, executes the selected strategy, validates the response, performs bounded repair when necessary, and records complete execution telemetry for analysis and regression testing.
 
-**GitHub:** [rohit16111999/optara](https://github.com/rohit16111999/optara) · **W&B:** [project](https://wandb.ai/models-student1155/optara) · **Weave:** [traces and evaluations](https://wandb.ai/models-student1155/optara/weave)
+## Demo
 
-**Mission Control:** [public app](https://optara-production.up.railway.app) — verified through read-only browser QA on 2026-09-13. **Experiment & Intelligence Lab:** [open in Molab](https://molab.marimo.io/github/rohit16111999/optara/blob/main/experiment_lab/optara_lab.py). See [MOLAB.md](MOLAB.md) for preview/runtime boundaries and [VALIDATION.md](VALIDATION.md) for measured results.
+**Execute** explains the selected recipe and its measured result. **Runs** reopens persisted executions without a model call. **Evaluations** compares measured recipe performance and exposes the evidence behind tradeoffs.
 
-**Mission Control shows what Optara decides now. marimo shows the empirical evidence that teaches Optara what to decide next.** The operational surface executes and traces requests; the scientific surface compares recipes, Pareto membership, paired shadows, policy gates, and honest baseline results.
+[60–90 second saved-run walkthrough](DEMO.md) · [Reproducible Evaluation Notebook](https://molab.marimo.io/github/rohit16111999/optara/blob/main/experiment_lab/optara_lab.py) · [Weave](https://wandb.ai/models-student1155/optara/weave)
 
-Optara is an AI execution control plane. Give it a task, quality target, dollar budget, and deadline. It selects an execution recipe, evaluates the actual answer, repairs failed constraints within limits, and records evidence for future scheduling. A separate shadow path tests alternatives before a versioned policy can be promoted.
+The [existing public demo](https://optara-production.up.railway.app) was verified on September 13, 2026. It retains the earlier Mission Control UI: this portfolio release is in source and runs locally; it was **not redeployed**. Molab provides a public rendered preview; an interactive cloud session may require sign-in. See [MOLAB.md](MOLAB.md).
 
-![Real Optara execution](screenshots/live-run.png)
+![Previously verified real execution, before portfolio navigation cleanup](screenshots/live-run.png)
 
-## Run locally
+The existing screenshot documents the earlier UI. The current local navigation is Execute / Runs / Evaluations.
 
-Tested on Windows 11 with Python 3.12.14 and Node 22.22.2. Python 3.12–3.13, Node 22+, [uv](https://docs.astral.sh/uv/getting-started/installation/), and Chrome are required for the documented Windows setup and browser tests. The lockfiles pin the verified dependencies.
+## Problem
+
+LLM applications must balance quality, cost, latency and reliability. Different requests justify different execution configurations. Model price alone misses judging, verification, repair and failure costs; Optara measures the complete recipe rather than assuming a model name determines its performance.
+
+## How it works
+
+```mermaid
+flowchart TD
+  Request --> Profile[Task profiler]
+  Profile --> Candidates[Candidate execution recipes]
+  Candidates --> Scheduler[Constraint-aware scheduler]
+  Scheduler --> Inference[Guarded W&B Inference]
+  Inference --> Evaluator
+  Evaluator -- pass --> Result
+  Evaluator -- fail within limits --> Repair[Bounded repair]
+  Repair --> Evaluator
+  Evaluator -- allowance exhausted --> Result[Best evaluated result + honest SLA]
+  Result --> Evidence[Weave trace + persisted execution evidence]
+  Evidence --> Dataset[Versioned evaluation observations]
+```
+
+## Key features
+
+- Recipe scheduling across model, reasoning, token allowance, verification and repair settings.
+- Expected candidate metrics and actual completed-run metrics presented separately.
+- Exact-reference, schema and supported Python behavioral checks; open-ended answers use labelled rubric estimates.
+- Bounded repair, atomic spend reservations, deadlines and call limits.
+- Actual token usage, calculated list-rate cost, serving latency and quality/budget/deadline SLA.
+- Validated cache, persistent run history, SSE replay and remotely verified Weave traces.
+- Offline evaluator regression tests and reproducible marimo / Molab evidence analysis.
+- Independent shadow evidence and explicit policy gates under Advanced Experiments.
+
+## Stack
+
+Python, FastAPI, Pydantic, HTTPX and SQLite; Next.js, React, TypeScript and Tailwind; React Flow, Motion and Recharts; W&B Serverless Inference, Weave and MCP; marimo, pandas and Altair. Pytest and Playwright provide automated validation.
+
+## Evaluation
+
+The existing local LIVE evidence, checked September 14, 2026, contains **64 current-evaluator observations, 7 observed recipes, 8 uncached production executions, 6 completed shadow pairs and 2 policy versions**. These are different scopes, not additive counts. Authentication-only observations are excluded. The UI computes values from its loaded namespace rather than hardcoding these counts.
+
+The saved local demo run `9dbae5a2-aec1-4ff3-a35c-9282e6cf515f` returned **703**, quality **1.00**, **128 tokens**, calculated cost **$0.00000584**, serving latency **0.563s**, and **SLA HIT**. It used `openai/gpt-oss-20b`, Focused v2, and an objective exact-match evaluator. [Recorded Weave trace](https://wandb.ai/models-student1155/optara/r/call/01a098ad-631e-76a8-af46-c4f5b4f347e3).
+
+The existing 18-execution benchmark achieved mean quality 0.991667 and 100% SLA for all three strategies. Mean costs were Always Cheap $0.0000334583, Always Strong $0.0000266867 and Optara $0.0000379933: **Optara did not save cost in this sample**. Five paired math shadows had equal quality but were more expensive and slower, so promotion was blocked.
+
+This small evaluation corpus demonstrates execution behavior and trade-off analysis; it does not establish universal model or cost superiority. Costs are actual usage multiplied by documented uncached list rates, not billing receipts. Historical evidence and its limitations are retained in [VALIDATION.md](VALIDATION.md).
+
+## Running locally
+
+Tested with Windows, Python 3.12 and Node 22. The setup uses uv and the existing lockfiles.
 
 ```powershell
 .\setup.ps1
 .\start.ps1
 ```
 
-Open **http://127.0.0.1:3000**. API documentation: http://127.0.0.1:8000/docs. Ctrl+C stops both services, including their Windows child processes. Neither startup nor page refresh performs inference or calibration. Keep the services bound to localhost.
+Open http://127.0.0.1:3000; API docs: http://127.0.0.1:8000/docs. Startup and browsing do not invoke models. Use **Runs** to inspect existing local records; a fresh clone does not include the private runtime database. The notebook includes a public-safe evidence snapshot.
 
-For a production frontend:
+For a production frontend build:
 
 ```powershell
-node frontend/node_modules/next/dist/bin/next build frontend
+npm --prefix frontend run build
 .\start.ps1 -Production
 ```
 
-For macOS/Linux, install with `uv sync --frozen --python 3.12` and `npm ci --prefix frontend`, then `node scripts/dev.mjs`. Use `.venv/bin/python` in place of the Windows Python path below. Cross-platform scripts are provided; the completed browser validation was on Windows.
+For macOS/Linux: `uv sync --frozen --python 3.12`, `npm ci --prefix frontend`, then `node scripts/dev.mjs`. Windows is the validated environment. To open the local notebook, run `.\lab.ps1`.
 
-## Secure W&B setup
+Live execution requires W&B credentials. `.\scripts\login.ps1` uses hidden terminal input; never put a key in chat or Git. `.env.example` documents variable names. Live requests are explicit and can incur cost; use Simulation for offline exploration. No paid verification command is part of startup or this demo.
 
-```powershell
-.\scripts\login.ps1
-.venv\Scripts\python.exe -m scripts.verify_wandb
-```
-
-The login script prompts in a terminal with **hidden input**, verifies the key through W&B, and uses W&B's standard saved credential file. It never prints the key or writes it into the repository. Existing `WANDB_API_KEY`, `.env`, or standard W&B credentials are supported. `.env.example` lists variable names only; copying it is optional because defaults are safe and saved login works.
-
-The verifier discovers real model IDs, makes one tiny paid `OPTARA_WANDB_OK` request, and reads its trace back from Weave. Default project: [models-student1155/optara](https://wandb.ai/models-student1155/optara). [Weave project](https://wandb.ai/models-student1155/optara/weave).
-
-The UI's **Verify connections** performs read-only discovery and authentication checks. Inference and trace delivery become connected after a successful real execution. Network/account failures remain visible; the local UI and explicitly selected Simulation continue working.
-
-## What is scheduled
-
-A recipe includes an authenticated model ID, reasoning configuration, output token budget, verifier configuration, agent count, sequential execution, evaluator strategy, repair limit, and version. Focused, Deliberate, and Verified recipes change these dimensions. Verified recipes perform a second review; its findings inform the rubric judge and any required repair. Deterministic checks retain final authority where available.
-
-This is more than model routing: different recipes on the same model incur different costs and yield different observed quality. Optara selects the whole execution plan and measures its outcome. It does not claim to have invented model routing.
-
-The profiler classifies coding, math, extraction, structured transformation, classification, summarization, writing, and reasoning using deterministic heuristics. It identifies supported reference checks and freshness-sensitive tasks without a model call. Arbitrary prompts work; unrecognized semantics receive a labelled rubric estimate rather than invented ground truth.
-
-## Scheduling and learning
-
-1. Retrieve observations for the task family, execution mode, recipe version, and current evaluator version.
-2. Exclude recipes whose expected cost or latency exceeds the request constraints. Unknown prices prevent paid execution.
-3. Remove measured Pareto-dominated recipes: another recipe must have at least equal quality, at most equal cost and latency, and one strict improvement. Cold priors cannot eliminate untested recipes.
-4. Retain the top K candidates (default 3). Choose the cheapest candidate whose conservative quality estimate meets the target. If none does, choose the best feasible compromise and explicitly show SLA risk.
-5. Evaluate, persist the outcome, and update estimates. Production policy preferences break ties; they cannot bypass feasibility or the quality ordering.
-
-Quality uses a Beta(1,1) prior with fractional scores: `(1 + sum(scores)) / (n + 2)`. Uncertainty is `min(0.5, 1.96 * sqrt(q*(1-q)/(n+3)))`. Cost and latency use observed means. These are practical small-sample heuristics, not calibrated guarantees. An unobserved recipe has quality 0.5 ± 0.5 and a clearly labelled 15-second latency prior. Cache hits do not improve model performance statistics.
-
-## Evaluation, repair, and SLA
-
-- Exact arithmetic and explicit references use exact comparisons.
-- JSON uses JSON Schema and optional expected field values. Schema compliance alone proves only the supplied structural constraints.
-- Supported Python exercises use human-authored behavioral tests in a bounded AST interpreter. There is no Python `exec`/`eval`, import, filesystem, network, reflection, or unrestricted generated-code execution. Unsupported syntax is an evaluator limitation with zero confidence. Passing five longest-consecutive cases does not prove O(n) complexity.
-- Open-ended answers use a separate rubric judge, visibly labelled **Estimated quality**. Judge calls consume the same spend, time, and call limits. Self-reported answer confidence is not used as quality.
-
-Quality passes at `score >= requested target`. SLA HIT requires quality, total token-based cost, and execution latency all to meet their constraints. Missing cost means SLA MISS. The execution timer ends when the answer and evaluation are ready; subsequent Weave upload and shadow work are reported separately and are not counted as serving latency.
-
-Failed checks trigger a targeted repair prompt preserving correct parts and identifying the failed constraints. Repair can expand output allowance up to 2,048 tokens, subject to the central guard. Defaults permit one repair and five total model calls. If repair is worse or blocked, the best evaluated answer is retained with an honest SLA result.
-
-## Safe cache
-
-The cache uses the trimmed, case-preserving prompt, evaluation specification, quality target, complete recipe/version, evaluator version, and live/simulation mode. It does not merge case or internal whitespace. Only passing results with adequate evaluator confidence are stored, for 24 hours. Volatile/personalized freshness patterns disable reuse. Budget and deadline are rechecked against the zero-cost cached result; changed recipe or evaluator invalidates reuse. The form exposes **Reuse validated results** and every hit is visible in the result and trace.
-
-## Shadow Lab and policy safety
-
-Production returns its answer before optional shadow execution. A deterministic hash samples 8% of uncached requests by default; a completed run also exposes **Test a shadow recipe**. A separate spend scope evaluates an alternative on the same task and reference checks. One production run may contribute only one pair. An existing candidate's evidence batch is filled before exploration spreads to another candidate.
-
-Paired quality, cost, latency, and SLA deltas are persisted. Production output, quality, spend, latency, and SLA are immutable. Candidate policies move through candidate/shadow/production/rejected versions. Promotion is an explicit, revalidated operation requiring at least five distinct production pairs, a lower quality-delta bound of at least −0.02, and a supported cost, latency (>0.01 seconds), or SLA improvement. Bounds use mean ± configured z times standard error; default z=1.96. Small correlated samples remain a limitation. No single run, LLM claim, or ARIA suggestion can promote a policy.
-
-## Calibration and benchmark
-
-Start Optara, then run:
+## Tests
 
 ```powershell
-.venv\Scripts\python.exe -m scripts.calibrate --max-models 2 --max-cost 0.03 --tasks 6
-.venv\Scripts\python.exe -m scripts.benchmark --max-models 2 --max-cost 0.03 --tasks 6
+.venv\Scripts\python.exe -m pytest -q backend/tests -m "not live"
+npm --prefix frontend run typecheck
+npm --prefix frontend run build
 ```
 
-The six-task suite contains arithmetic, exact instructions, extraction/JSON, two Python exercises, and rubric-based reasoning. Calibration measures three recipe variants per model. The frontend's quick controls use three tasks; the CLI above exercises all six. No batch starts automatically. `--dry-run` explicitly selects isolated simulation fixtures and spends nothing.
-
-Always Cheap fixes the recipe with the lowest observed whole-execution cost. Always Strong fixes the highest observed mean-quality recipe; quality ties are deterministic and do not imply any model is inherently strongest. Optara remains adaptive. All three use the same allowed recipe pool, task suite, target 0.90, budget, deadline, evaluator, and disabled cache. Reports contain mean quality, mean/median cost, mean latency, SLA rate, and cost per success. Calibration and evaluation reuse a tiny suite, so these are **in-sample demonstrations**, not general savings claims. Earlier experiments remain immutable when recipes/evaluators change.
-
-See [VALIDATION.md](VALIDATION.md) for measured results, current versions, and verification links.
-
-## Weave and MCP
-
-Each live run creates a root Weave call with child operations for profiling, history, ranking, scheduling, cache, inference, evaluation, repair, and learning. Outputs include exact recipes, actual usage, calculated cost, evaluation method, timing, SLA, and scheduler rationale. The backend flushes and reads the root back before displaying **Trace recorded**. Logging failure does not destroy the served answer.
-
-Real `weave.EvaluationLogger` evaluations record calibration and benchmark rows. Shadow comparisons record paired evaluation rows and a comparison/policy trace linked by production and shadow IDs. Shadow tracing is a separate post-result trajectory; it does not reopen or change the production trace.
-
-W&B MCP supports authenticated project discovery, trace schema discovery, trace counts, and historical queries. It is independent of live scheduling. Reproduce the protocol/history checks with:
+With both services running, the targeted saved-run browser check is:
 
 ```powershell
-.venv\Scripts\python.exe -m scripts.verify_connections
+npm --prefix frontend test -- --grep "saved real run portfolio"
 ```
 
-Optara's own stdio MCP server exposes `optimize_task`, `get_run_result`, `explain_recipe`, `get_policy_summary`, and `get_recent_performance`:
+That check uses the saved local demo ID above, fails if it is absent, and blocks all mutating API requests. It never creates a substitute live run.
+
+## Regression evaluations
+
+Reuse the existing evaluator/controller regression tests; no second evaluation subsystem is needed:
 
 ```powershell
-.venv\Scripts\python.exe -m backend.mcp_server.server
+.venv\Scripts\python.exe -m pytest -q backend/tests/test_control_plane.py -k "exact_evaluator or structural_json or json_reference or supported_python or targeted_repair_bounded"
 ```
 
-Configure that executable, arguments, and repository working directory in any MCP client. Keep the HTTP backend running. `optimize_task` can spend money within its request budget; the other tools are read-only. Weave is initialized before tool registration and uses the installed SDK's supported `patch_fastmcp()` integration. Protocol stdout stays clean. Client/server distributed trace propagation is not claimed.
+These offline fixtures check exact answers, JSON semantics/structure, Python behavioral tests and bounded repair, with a nonzero exit on failure. They are regression protection for supported behavior, not a live-model quality benchmark. Historical benchmark/calibration runners remain available but are not part of this workflow.
 
-Official implementation references: [Inference API](https://docs.wandb.ai/inference), [model discovery](https://docs.wandb.ai/inference/api-reference/list-models), [token pricing](https://site.wandb.ai/pricing/tokens/), [Weave Calls](https://docs.wandb.ai/weave/guides/tracking/create-call), [evaluation logger](https://docs.wandb.ai/weave/guides/evaluation/evaluation_logger), [MCP integration](https://docs.wandb.ai/weave/guides/integrations/mcp).
+## Architecture
 
-## marimo / Molab experiment lab
+See [ARCHITECTURE.md](ARCHITECTURE.md) for contracts, invariants and failure behavior. W&B MCP provides history/development queries independently of serving; Optara's stdio MCP server is `python -m backend.mcp_server.server` and uses the existing HTTP backend. Its `optimize_task` tool can spend money when explicitly invoked.
 
-```powershell
-.\lab.ps1
-.venv\Scripts\python.exe -m scripts.export_evidence --mode live --output data/evidence.json
-```
+Experimental W&B ARIA analysis was used to inspect accumulated evaluation evidence. ARIA is not part of the production request path and does not directly modify production policy. A callable programmatic integration is not verified.
 
-Open http://127.0.0.1:2718. Select evidence namespace/family, compare recipe quality/cost/latency, inspect family-specific Pareto points, review policy versions and shadow pairs, and browse benchmark/run history. The controlled-experiment form only submits work on an explicit click. Its default is Simulation.
+## Limitations
 
-For Molab, [open the GitHub notebook preview](https://molab.marimo.io/github/rohit16111999/optara/blob/main/experiment_lab/optara_lab.py); the committed session provides rendered outputs. **Run it now** starts an interactive server when account access permits. See [MOLAB.md](MOLAB.md). The notebook defaults to the public-safe `data/evidence.json` snapshot, using the repository copy locally or GitHub remotely. Uploading an export also works without localhost or credentials. LIVE and SIMULATION are checked separately, including mismatched uploads.
+- Small in-sample corpus; heuristic profiling and uncertainty estimates are not general guarantees.
+- Open-ended quality depends on the judge; bounded Python tests do not certify arbitrary programs or asymptotic complexity.
+- Single-user demonstrator with two worker slots, SQLite persistence and no multi-tenant authentication. It is production-oriented, not an enterprise-scale deployment.
+- Pricing and model availability may change. Trace contents can include task/output data; use public-safe demo tasks.
+- The public host retains the previous UI. Molab preview publication is distinct from a verified running cloud kernel.
 
-The lab includes an overview, quality/cost and quality/latency charts, family-specific Pareto membership, recorded scheduler decisions, shadow deltas, policy confidence/gates, the latest benchmark, run history, and sponsor evidence. Historical reports remain available; the benchmark tab never combines incompatible report versions. Controlled experiments default to Simulation and require an explicit submit against the local backend. No page-load inference occurs.
+## Future work
 
-Exact standalone local command:
-
-```powershell
-.venv\Scripts\python.exe -m marimo run experiment_lab/optara_lab.py --host 127.0.0.1 --port 2718 --headless --no-sandbox
-```
-
-## Sponsor mapping and optional access
-
-| Integration | Real role | Current access boundary |
-|---|---|---|
-| W&B Serverless Inference | Authenticated model discovery and execution | Verified live |
-| Weave | Full trajectories, evaluation datasets, shadow and MCP evidence | Verified remotely |
-| W&B MCP | Project and trace/history queries | Authenticated tools verified |
-| marimo / Molab | Reactive experiment analysis and controlled local execution | Local app verified; portable notebook/export |
-| ARIA | Experiment scientist: evidence → proposed candidate → shadow gate | No verified callable account/API access; disabled |
-| TypeSafe | Optional candidate/provider adapter | No supplied hackathon credential or API contract; disabled |
-| CoreWeave Sandboxes | Optional isolated generated-code execution | No `CWSANDBOX_API_KEY` or runner access; bounded local fallback |
-
-ARIA handoff: open the real Weave project/evaluations, supply the exported evidence, and ask ARIA (if enabled in your account) to identify expensive recipes at equal quality within each family. Request evidence counts and a proposed recipe, not direct production changes. Review suggestions and test them through Shadow Lab. No ARIA analysis or recommendation has been fabricated. Sandbox capability requires its separate [control-plane credentials and runner access](https://docs.coreweave.com/products/sandboxes/get-started); an inference key does not establish it.
-
-## Configuration and spend
-
-| Variable | Default |
-|---|---:|
-| `WANDB_ENTITY` / `WANDB_PROJECT` | `models-student1155` / `optara` |
-| `WANDB_MCP_URL` | `https://mcp.withwandb.com/mcp` |
-| `MAX_COST_PER_REQUEST` | $0.05 |
-| `MAX_TOTAL_DEV_SPEND` | $2.00 persisted cumulative cap |
-| `MAX_CALIBRATION_SPEND` / `MAX_BENCHMARK_SPEND` | $0.25 each |
-| `MAX_SHADOW_SPEND` | $0.10 |
-| `MAX_MODEL_CALLS_PER_REQUEST` / `MAX_REPAIRS_PER_REQUEST` | 5 / 1 |
-| `SHADOW_EXPLORATION_RATE` / `TOP_K` | 0.08 / 3 |
-| `POLICY_MIN_EVIDENCE` | 5 |
-| `POLICY_QUALITY_TOLERANCE` / `POLICY_CONFIDENCE_Z` | 0.02 / 1.96 |
-| `POLICY_MIN_LATENCY_IMPROVEMENT` | 0.01 seconds |
-| `DRY_RUN_MODE` | false; true forces all execution to Simulation |
-| `OPTARA_DB_PATH` | `data/optara.db` |
-
-Every model call reserves conservatively estimated input/output spend in a SQLite transaction before execution. The guard enforces request, batch, scope, total-development, call-count, and monotonic-deadline limits. Known actual usage settles reservations; timeouts or missing usage retain uncertain reservations. No blind transport retries. Unknown authoritative prices block paid calls.
-
-Displayed cost is actual provider token usage multiplied by documented **uncached list rates** in `data/pricing.json`, with source and verification date. It is not a billing receipt and does not assume provider cache discounts. Model identifiers come from authenticated discovery; models without verified pricing are displayed but not scheduled for paid calls.
-
-## Tests and visual QA
-
-With the app running:
-
-```powershell
-.\test.ps1
-```
-
-Normal tests use controlled fixtures; they do not spend inference credits. The suite covers Pareto rules, scheduling, isolation, cache/versioning, cost accounting, concurrent guards, evaluator boundaries, repair bounds, policy gates, API/SSE, and recovery. Playwright exercises the form, graph, result, errors, navigation, and responsive widths. Screenshots are in `screenshots/`; live and simulation are visibly labelled.
-
-Opt-in paid checks:
-
-```powershell
-$env:OPTARA_LIVE_TEST='1'
-.venv\Scripts\python.exe -m pytest -q -m live
-Remove-Item Env:OPTARA_LIVE_TEST
-.venv\Scripts\python.exe -m scripts.validate_live
-```
-
-The last command performs five small real task/shadow pairs and bounded cache checks. Run it intentionally; it is not part of ordinary tests. To scan source and local evidence without printing matched secrets:
-
-```powershell
-.venv\Scripts\python.exe -m scripts.secret_scan
-```
-
-## Architecture and limitations
-
-Next.js supplies Mission Control, React Flow stages, Motion transitions, and Recharts analysis. FastAPI owns execution and SSE; SQLite stores documents, ordered events, and spend reservations. HTTPX isolates the inference adapter. No heavyweight queue, vector database, or agent framework is needed. See [ARCHITECTURE.md](ARCHITECTURE.md), [DEMO.md](DEMO.md), and [SUBMISSION.md](SUBMISSION.md).
-
-This is a single-user demonstrator with two concurrent worker slots and an existing public demo deployment. Priority is recorded but does not implement a preemptive queue. The heuristic profiler does not add external retrieval, so current-events tasks are not grounded. Model/judge variance and small-sample policy bounds limit general claims. The AST evaluator deliberately supports a subset of Python. Historical traces contain task content and model output after credential redaction; use synthetic/public demo tasks. The public demo has no tenant authentication; its persisted $2 inference ledger bounds aggregate model spending. SQLite and origin checks are not a multi-tenant security boundary. Hosting remains unchanged in the final pass.
-
-Production evolution: retain the typed gateway, recipe/guard contracts, and event schema while moving to stateless API services, durable queues, isolated worker pools, managed relational storage, distributed cache, multi-tenant spend ledgers, regional execution, and multiple provider adapters. Add workload-specific held-out evaluations, calibrated uncertainty, queue-aware deadlines, and authenticated policy approvals before production adoption.
+Held-out workload evaluation, calibrated uncertainty and authenticated multi-user controls.
